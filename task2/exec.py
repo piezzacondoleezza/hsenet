@@ -1,10 +1,10 @@
-import glog as logging
 import argparse
 import subprocess
 import platform
+import time
 
-def check(host, MTU, os):
-    if os == 'darwin':
+def check(host, MTU, os_type):
+    if os_type == 'darwin':
         cmd = ['ping', '-D', '-s', str(MTU), str(host), '-c', '1', '-W', '3000']
     else:
         cmd = ['ping', '-M', 'do', '-s', str(MTU), str(host), '-c', '1', '-W', '3']
@@ -17,26 +17,20 @@ parser.add_argument(
     required=True,
     help='host for which the minimal MTU is searched for'
 )
-parser.add_argument(
-    '--loglevel',
-    default='WARN',
-    help='glog loglevel. Possible options: INFO WARN. Useless options: CRITICAL FATAL ERROR NOTSET WARNING DEBUG'
-)
 
 args = parser.parse_args()
 host = args.host
-loglevel = args.loglevel
-logging.setLevel(loglevel)
-current_os = platform.system().lower()
+os_type = platform.system().lower()
 
 left, right = 0, 1502 - 28
 while right - left > 1:
     mid = (left + right) // 2
-    if check(host, mid, current_os):
-        logging.info('MTU {} is ok'.format(mid))
+    if check(host, mid, os_type):
+        print('MTU {} is ok'.format(mid))
         left = mid
     else:
-        logging.info(f'MTU {mid} bad')
+        print('MTU {} bad'.format(mid))
         right = mid
+    time.sleep(0.3)
 
 print('min MTU for {} is {}'.format(host, left))
